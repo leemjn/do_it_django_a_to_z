@@ -1,6 +1,7 @@
 from django.test import TestCase,Client
 from bs4 import BeautifulSoup
 from .models import Post
+from django.contrib.auth.models import User
 # Create your tests here.
 class TestView(TestCase):
     def test_post_list(self):
@@ -9,6 +10,15 @@ class TestView(TestCase):
 class TestView(TestCase):
     def setUp(self):
         self.client=Client()
+
+        self.user_trump = User.objects.create_user(
+            username='trump',
+            password='somepassword'
+        )
+        self.user_obama = User.objects.create_user(
+            username='obama',
+            password='somepassword'
+        )
 
     def test_post_list(self):
         response = self.client.get('/blog/')
@@ -42,10 +52,12 @@ class TestView(TestCase):
         post_001 = Post.objects.create(
             title='첫 번째 포스트입니다.',
             content='Hello World. We are the world.',
+            author=self.user_trump
         )
         post_002 = Post.objects.create(
             title='두 번째 포스트입니다.',
             content='1등이 전부는 아니잖아요?',
+            author=self.user_obama
         )
         self.assertEqual(Post.objects.count(), 2)
 
@@ -58,6 +70,9 @@ class TestView(TestCase):
         self.assertIn(post_002.title, main_area.text)
 
         self.assertNotIn('아직 게시물이 없습니다', main_area.text)
+
+        self.assertIn(post_001.author.username.upper(), main_area.text)
+        self.assertIn(post_002.author.username.upper(), main_area.text)
 
 
     def test_post_detail(self):
