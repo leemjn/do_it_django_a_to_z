@@ -41,6 +41,22 @@ class TestView(TestCase):
             author=self.user_obama,
         )
 
+    def test_category_page(self):
+        response = self.client.get(self.category_programming.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+        self.navbar_test(soup)
+        self.category_card_test(soup)
+
+        self.assertIn(self.category_programming.name, soup.h1.text)
+
+        main_area = soup.find('div', id='main-area')
+        self.assertIn(self.category_programming.name, main_area.text)
+        self.assertIn(self.post_001.title, main_area.text)
+        self.assertNotIn(self.post_002.title, main_area.text)
+        self.assertNotIn(self.post_003.title, main_area.text)
+
     def test_post_list(self):
         self.assertEqual(Post.objects.count(), 3)
         response = self.client.get('/blog/')
@@ -95,21 +111,6 @@ class TestView(TestCase):
         about_me_btn = navbar.find('a', text='About me')
         self.assertEqual(about_me_btn.attrs['href'], '/about_me/')
 
-        #
-        #
-        #
-        # response = self.client.get('/blog/')
-        # soup = BeautifulSoup(response.content, 'html.parser')
-        # self.assertEqual(response.status_code, 200)
-        #
-        # main_area = soup.find('div', id='main-area')
-        # self.assertIn(post_001.title, main_area.text)
-        # self.assertIn(post_002.title, main_area.text)
-        #
-        # self.assertNotIn('아직 게시물이 없습니다', main_area.text)
-        #
-        # self.assertIn(post_001.author.username.upper(), main_area.text)
-        # self.assertIn(post_002.author.username.upper(), main_area.text)
 
     def category_card_test(self, soup):
         categories_card = soup.find('div', id='categories-card')
